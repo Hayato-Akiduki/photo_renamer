@@ -12,6 +12,7 @@ namespace PhotoRenamer
         public ConflictMode Conflict = ConflictMode.Suffix;
         public bool Backup;
         public string LastFolder = "";
+        public ThemeMode Theme = ThemeMode.System;
 
         static string FilePath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhotoRenamer", "settings.txt");
@@ -32,6 +33,7 @@ namespace PhotoRenamer
                 if (d.TryGetValue("Conflict", out var c) && Enum.TryParse(c, out ConflictMode m)) s.Conflict = m;
                 if (d.TryGetValue("Backup", out var b)) s.Backup = b == "1";
                 if (d.TryGetValue("LastFolder", out var l)) s.LastFolder = l;
+                if (d.TryGetValue("Theme", out var t) && Enum.TryParse(t, out ThemeMode tm)) s.Theme = tm;
             }
             catch { }
             return s;
@@ -48,6 +50,7 @@ namespace PhotoRenamer
                     "Conflict=" + Conflict,
                     "Backup=" + (Backup ? "1" : "0"),
                     "LastFolder=" + LastFolder,
+                    "Theme=" + Theme,
                 }, Encoding.UTF8);
             }
             catch { }

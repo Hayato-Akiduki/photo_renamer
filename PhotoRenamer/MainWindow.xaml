@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="写真・動画リネーマー" Width="1180" Height="820" MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgBrush}"
+        Background="{DynamicResource BgBrush}"
         FontFamily="Yu Gothic UI, Meiryo UI, Segoe UI"
-        Foreground="{StaticResource TextBrush}"
+        Foreground="{DynamicResource TextBrush}"
         Icon="camera.ico"
         AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
@@ -46,15 +46,15 @@
                 <TextBlock Style="{StaticResource CardTitle}" Text="フォルダを選ぶ" Margin="0" VerticalAlignment="Center"/>
               </StackPanel>
 
-              <Border x:Name="DropZone" CornerRadius="8" BorderThickness="1.5" BorderBrush="#B9C3E8"
-                      Background="#F7F9FF" Padding="14,16" Cursor="Hand" MouseLeftButtonUp="DropZone_Click"
+              <Border x:Name="DropZone" CornerRadius="8" BorderThickness="1.5" BorderBrush="{DynamicResource DropLineBrush}"
+                      Background="{DynamicResource DropBgBrush}" Padding="14,16" Cursor="Hand" MouseLeftButtonUp="DropZone_Click"
                       ToolTip="クリックしてフォルダを選択（Ctrl+O）">
                 <StackPanel>
                   <TextBlock x:Name="FolderTitle" Text="ここをクリック、またはフォルダをドラッグ＆ドロップ"
-                             FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"
+                             FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextBrush}"
                              TextWrapping="Wrap" TextAlignment="Center"/>
                   <TextBlock x:Name="FolderPath" Text="写真や動画が入ったフォルダを選んでください"
-                             FontSize="12.5" Foreground="{StaticResource SubTextBrush}"
+                             FontSize="12.5" Foreground="{DynamicResource SubTextBrush}"
                              TextTrimming="CharacterEllipsis" TextAlignment="Center" Margin="0,4,0,0"
                              ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                 </StackPanel>
@@ -89,9 +89,9 @@
                 <Button Style="{StaticResource TokenButton}" Content="元の名前" Tag="{}{original}" Click="Token_Click" ToolTip="{}{original} 元のファイル名（拡張子なし）"/>
               </WrapPanel>
 
-              <Border Background="#F7F8FA" CornerRadius="6" Padding="10,8" Margin="0,6,0,0">
+              <Border Background="{DynamicResource HeaderBrush}" CornerRadius="6" Padding="10,8" Margin="0,6,0,0">
                 <StackPanel>
-                  <TextBlock Text="変更後の例" FontSize="12" Foreground="{StaticResource SubTextBrush}"/>
+                  <TextBlock Text="変更後の例" FontSize="12" Foreground="{DynamicResource SubTextBrush}"/>
                   <TextBlock x:Name="ExampleText" FontSize="14" FontWeight="SemiBold" FontFamily="Consolas, Yu Gothic UI"
                              TextWrapping="Wrap" Margin="0,2,0,0"/>
                 </StackPanel>
@@ -134,14 +134,16 @@
           <DockPanel Margin="18,14,18,12">
             <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="12.5"
                     x:Name="ReloadButton" Content="再読み込み (F5)" Click="Reload_Click" IsEnabled="False"/>
+            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="12.5" Margin="0,0,8,0"
+                    x:Name="ThemeButton" Click="Theme_Click" ToolTip="画面の明るさを切り替えます（自動 → ライト → ダーク）"/>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
               <TextBlock Text="プレビュー" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-              <TextBlock x:Name="SummaryText" FontSize="13" Foreground="{StaticResource SubTextBrush}"
+              <TextBlock x:Name="SummaryText" FontSize="13" Foreground="{DynamicResource SubTextBrush}"
                          Margin="14,1,0,0" VerticalAlignment="Center"/>
             </StackPanel>
           </DockPanel>
 
-          <Border Grid.Row="1" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,10,10" ClipToBounds="True">
+          <Border Grid.Row="1" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,10,10" ClipToBounds="True">
             <Grid>
               <DataGrid x:Name="Grid" Margin="0,0,0,4">
                 <DataGrid.Columns>
@@ -149,7 +151,7 @@
                   <DataGridTemplateColumn Header="" Width="34" CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                       <DataTemplate>
-                        <TextBlock Text="→" Foreground="#9AA1B0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="→" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center"/>
                       </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
@@ -164,7 +166,7 @@
                   <DataGridTextColumn Header="撮影日時" Binding="{Binding DateText}" Width="165">
                     <DataGridTextColumn.ElementStyle>
                       <Style TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="{StaticResource SubTextBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
                       </Style>
                     </DataGridTextColumn.ElementStyle>
                   </DataGridTextColumn>
@@ -191,8 +193,8 @@
               <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
                 <TextBlock Text="📷" FontSize="40" HorizontalAlignment="Center" FontFamily="Segoe UI Emoji"/>
                 <TextBlock x:Name="EmptyText" Text="フォルダを選ぶと、ここに変更後の名前が表示されます"
-                           FontSize="14" Foreground="{StaticResource SubTextBrush}" Margin="0,8,0,0" HorizontalAlignment="Center"/>
-                <TextBlock FontSize="12" Foreground="#8A90A0" Margin="0,14,0,0" TextAlignment="Center" LineHeight="18">
+                           FontSize="14" Foreground="{DynamicResource SubTextBrush}" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                <TextBlock FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="0,14,0,0" TextAlignment="Center" LineHeight="18">
                   対応形式　画像: JPG / PNG / HEIC / TIFF / WebP / BMP<LineBreak/>
                   動画: MP4 / MOV / AVI / MKV / M4V / 3GP / WMV / FLV / MTS
                 </TextBlock>
@@ -204,18 +206,21 @@
     </Grid>
 
     <!-- ============ 下: 実行バー ============ -->
-    <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+    <Border Grid.Row="1" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
       <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <Button x:Name="UndoButton" Style="{StaticResource SecondaryButton}" Content="↶ 元に戻す" Margin="0,0,10,0"
                   Click="Undo_Click" IsEnabled="False" ToolTip="直前のリネームを取り消します"/>
           <Button x:Name="RunButton" Style="{StaticResource PrimaryButton}" Content="名前を変更する" Click="Run_Click" IsEnabled="False"/>
         </StackPanel>
+        <TextBlock x:Name="VersionText" DockPanel.Dock="Left" FontSize="12" Foreground="{DynamicResource MutedBrush}"
+                   VerticalAlignment="Center" Margin="0,0,14,0" Padding="0,0,14,0"/>
+        <Border DockPanel.Dock="Left" Width="1" Background="{DynamicResource LineBrush}" Margin="-14,6,14,6"/>
         <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-          <TextBlock x:Name="StatusText" FontSize="13" Foreground="{StaticResource SubTextBrush}" TextTrimming="CharacterEllipsis"
+          <TextBlock x:Name="StatusText" FontSize="13" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis"
                      Text="準備完了"/>
           <ProgressBar x:Name="Progress" Height="4" Margin="0,6,0,0" Visibility="Collapsed" MaxWidth="420" HorizontalAlignment="Left" Width="420"
-                       Foreground="{StaticResource AccentBrush}" Background="#E6E9F0" BorderThickness="0"/>
+                       Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource TrackBrush}" BorderThickness="0"/>
         </StackPanel>
       </DockPanel>
     </Border>

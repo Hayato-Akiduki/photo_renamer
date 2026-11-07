@@ -22,7 +22,7 @@ namespace PhotoRenamer
             ("2026-11_0001（年月_連番）", "{YYYY}-{MM}_{N}"),
         };
 
-        readonly Settings _settings = Settings.Load();
+        readonly Settings _settings = App.Settings ?? Settings.Load();
         string _folder;
         List<MediaFile> _files = new List<MediaFile>();
         List<PlanItem> _plan = new List<PlanItem>();
@@ -45,6 +45,13 @@ namespace PhotoRenamer
             _loading = false;
             UpdateExample();
 
+            VersionText.Text = "v" + AppVersion;
+            VersionText.ToolTip = $"写真・動画リネーマー バージョン {AppVersion}";
+            UpdateThemeButton();
+            SourceInitialized += (s, e) => ThemeManager.SetDarkTitleBar(this, ThemeManager.IsDark);
+            ThemeManager.Changed += OnThemeChanged;
+            Closed += (s, e) => ThemeManager.Changed -= OnThemeChanged;
+
             // exe にフォルダをドラッグした場合などは起動時に読み込む
             var args = Environment.GetCommandLineArgs();
             if (args.Length > 1)
@@ -64,6 +71,47 @@ namespace PhotoRenamer
         }
 
         ConflictMode CurrentMode => (ConflictMode)Math.Max(0, ConflictBox.SelectedIndex);
+
+        static string AppVersion
+        {
+            get
+            {
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                var info = (System.Reflection.AssemblyInformationalVersionAttribute)Attribute.GetCustomAttribute(
+                    asm, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
+                return info?.InformationalVersion ?? asm.GetName().Version.ToString(3);
+            }
+        }
+
+        // ---------------- テーマ ----------------
+
+        void Theme_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.Theme = _settings.Theme switch
+            {
+                ThemeMode.System => ThemeMode.Light,
+                ThemeMode.Light => ThemeMode.Dark,
+                _ => ThemeMode.System,
+            };
+            ThemeManager.Apply(_settings.Theme);
+            _settings.Save();
+        }
+
+        void OnThemeChanged()
+        {
+            UpdateThemeButton();
+            Grid.Items.Refresh(); // 一覧のバッジ色を塗り直す
+        }
+
+        void UpdateThemeButton()
+        {
+            ThemeButton.Content = _settings.Theme switch
+            {
+                ThemeMode.Light => "☀ ライト",
+                ThemeMode.Dark => "☾ ダーク",
+                _ => "◐ 自動",
+            };
+        }
 
         // ---------------- フォルダ選択 ----------------
 

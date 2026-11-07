@@ -80,21 +80,11 @@ namespace PhotoRenamer
         };
     }
 
+    /// <summary>一覧で使う色。ThemeManager.Apply で切り替わる。</summary>
     public static class Theme
     {
-        static SolidColorBrush B(string hex)
-        {
-            var b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
-            b.Freeze();
-            return b;
-        }
-        public static readonly Brush Text = B("#1D2230");
-        public static readonly Brush SubText = B("#6A7183");
-        public static readonly Brush GreenBg = B("#E3F5E8"), GreenFg = B("#1B7A3A");
-        public static readonly Brush BlueBg = B("#E5EEFF"), BlueFg = B("#1F56C2");
-        public static readonly Brush OrangeBg = B("#FFF0DB"), OrangeFg = B("#A55A00");
-        public static readonly Brush GrayBg = B("#EEF0F3"), GrayFg = B("#5B6270");
-        public static readonly Brush RedFg = B("#C62828");
+        public static Brush Text, SubText;
+        public static Brush GreenBg, GreenFg, BlueBg, BlueFg, OrangeBg, OrangeFg, GrayBg, GrayFg, RedFg;
     }
 
     // ============================================================

@@ -2,9 +2,10 @@
 ; ビルド: build.ps1 を実行するか、ISCC.exe PhotoRenamer.iss
 
 #define AppName "写真・動画リネーマー"
-#define AppVersion "2.0.0"
 #define AppExe "PhotoRenamer.exe"
 #define SrcDir "..\PhotoRenamer\bin\Release\net48"
+; バージョンは exe から自動で読む（PhotoRenamer.csproj の <Version> を変えるだけでよい）
+#define AppVersion GetStringFileInfo(SrcDir + "\" + AppExe, "ProductVersion")
 
 [Setup]
 AppId={{6B7E2F3A-4C1D-4E8B-9A2F-5D3C7B1E9F40}
