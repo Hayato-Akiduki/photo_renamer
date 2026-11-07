@@ -6,6 +6,8 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Actions 画面から手動で動かすと、公開せずにビルドだけ試せる
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,10 +16,11 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: タグと csproj のバージョンが一致するか確認
-        shell: powershell
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
         run: |
           [xml]$proj = Get-Content PhotoRenamer\PhotoRenamer.csproj -Encoding UTF8
           $ver = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
@@ -25,18 +28,26 @@ jobs:
           if ($ver -ne $tag) { throw "タグ ($tag) と csproj の Version ($ver) が違います" }
 
       - name: Inno Setup を用意
-        shell: powershell
+        shell: pwsh
         run: |
           if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
             choco install innosetup -y --no-progress
           }
 
       - name: ビルドとインストーラー作成
-        shell: powershell
+        shell: pwsh
         run: .\build.ps1
 
+      - name: インストーラーを保存（試しビルド用）
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: installer
+          path: dist-installer/*.exe
+
       - name: リリースを公開
-        shell: powershell
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
