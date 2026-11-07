@@ -1,0 +1,223 @@
+<Window x:Class="PhotoRenamer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="写真・動画リネーマー" Width="1180" Height="820" MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        FontFamily="Yu Gothic UI, Meiryo UI, Segoe UI"
+        Foreground="{StaticResource TextBrush}"
+        Icon="camera.ico"
+        AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+
+  <Window.InputBindings>
+    <KeyBinding Key="O" Modifiers="Control" Command="ApplicationCommands.Open"/>
+    <KeyBinding Key="F5" Command="NavigationCommands.Refresh"/>
+  </Window.InputBindings>
+  <Window.CommandBindings>
+    <CommandBinding Command="ApplicationCommands.Open" Executed="PickFolder_Executed"/>
+    <CommandBinding Command="NavigationCommands.Refresh" Executed="Reload_Executed"/>
+  </Window.CommandBindings>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <Grid Margin="20,20,20,6">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="350"/>
+        <ColumnDefinition Width="18"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- ============ 左: 設定 ============ -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,2,0">
+        <StackPanel>
+
+          <!-- 1. フォルダ -->
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Border Style="{StaticResource StepNum}">
+                  <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Style="{StaticResource CardTitle}" Text="フォルダを選ぶ" Margin="0" VerticalAlignment="Center"/>
+              </StackPanel>
+
+              <Border x:Name="DropZone" CornerRadius="8" BorderThickness="1.5" BorderBrush="#B9C3E8"
+                      Background="#F7F9FF" Padding="14,16" Cursor="Hand" MouseLeftButtonUp="DropZone_Click"
+                      ToolTip="クリックしてフォルダを選択（Ctrl+O）">
+                <StackPanel>
+                  <TextBlock x:Name="FolderTitle" Text="ここをクリック、またはフォルダをドラッグ＆ドロップ"
+                             FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"
+                             TextWrapping="Wrap" TextAlignment="Center"/>
+                  <TextBlock x:Name="FolderPath" Text="写真や動画が入ったフォルダを選んでください"
+                             FontSize="12.5" Foreground="{StaticResource SubTextBrush}"
+                             TextTrimming="CharacterEllipsis" TextAlignment="Center" Margin="0,4,0,0"
+                             ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <!-- 2. 名前の形式 -->
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Border Style="{StaticResource StepNum}">
+                  <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Style="{StaticResource CardTitle}" Text="新しい名前の形式" Margin="0" VerticalAlignment="Center"/>
+              </StackPanel>
+
+              <TextBlock Style="{StaticResource Label}" Text="よく使う形式"/>
+              <ComboBox x:Name="PresetBox" SelectionChanged="PresetBox_SelectionChanged" Margin="0,0,0,12"/>
+
+              <TextBlock Style="{StaticResource Label}" Text="形式（自由に編集できます）"/>
+              <TextBox x:Name="FormatBox" FontFamily="Consolas, Yu Gothic UI" TextChanged="FormatBox_TextChanged"/>
+
+              <WrapPanel x:Name="TokenPanel" Margin="0,10,0,0" ToolTip="押すとカーソル位置に挿入されます">
+                <Button Style="{StaticResource TokenButton}" Content="年" Tag="{}{YYYY}" Click="Token_Click" ToolTip="{}{YYYY} 例: 2026"/>
+                <Button Style="{StaticResource TokenButton}" Content="月" Tag="{}{MM}" Click="Token_Click" ToolTip="{}{MM} 例: 11"/>
+                <Button Style="{StaticResource TokenButton}" Content="日" Tag="{}{DD}" Click="Token_Click" ToolTip="{}{DD} 例: 06"/>
+                <Button Style="{StaticResource TokenButton}" Content="時" Tag="{}{HH}" Click="Token_Click" ToolTip="{}{HH} 例: 14"/>
+                <Button Style="{StaticResource TokenButton}" Content="分" Tag="{}{mm}" Click="Token_Click" ToolTip="{}{mm} 例: 05"/>
+                <Button Style="{StaticResource TokenButton}" Content="秒" Tag="{}{SS}" Click="Token_Click" ToolTip="{}{SS} 例: 09"/>
+                <Button Style="{StaticResource TokenButton}" Content="連番" Tag="{}{N}" Click="Token_Click" ToolTip="{}{N} 撮影日時の古い順に 0001, 0002 …"/>
+                <Button Style="{StaticResource TokenButton}" Content="元の名前" Tag="{}{original}" Click="Token_Click" ToolTip="{}{original} 元のファイル名（拡張子なし）"/>
+              </WrapPanel>
+
+              <Border Background="#F7F8FA" CornerRadius="6" Padding="10,8" Margin="0,6,0,0">
+                <StackPanel>
+                  <TextBlock Text="変更後の例" FontSize="12" Foreground="{StaticResource SubTextBrush}"/>
+                  <TextBlock x:Name="ExampleText" FontSize="14" FontWeight="SemiBold" FontFamily="Consolas, Yu Gothic UI"
+                             TextWrapping="Wrap" Margin="0,2,0,0"/>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <!-- 3. オプション -->
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Border Style="{StaticResource StepNum}">
+                  <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Style="{StaticResource CardTitle}" Text="オプション" Margin="0" VerticalAlignment="Center"/>
+              </StackPanel>
+
+              <TextBlock Style="{StaticResource Label}" Text="同じ名前になったとき"/>
+              <ComboBox x:Name="ConflictBox" SelectionChanged="Option_Changed" Margin="0,0,0,12">
+                <ComboBoxItem Content="番号を付けて区別する（_1, _2 …）"/>
+                <ComboBoxItem Content="2つ目以降は名前を変えない"/>
+                <ComboBoxItem Content="1つだけ残し、他はごみ箱へ"/>
+              </ComboBox>
+
+              <CheckBox x:Name="BackupCheck" Content="実行前にコピーを作る（.bak）" Checked="Option_Changed" Unchecked="Option_Changed"/>
+            </StackPanel>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- ============ 右: プレビュー ============ -->
+      <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0" Margin="0,0,0,14">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <DockPanel Margin="18,14,18,12">
+            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="12.5"
+                    x:Name="ReloadButton" Content="再読み込み (F5)" Click="Reload_Click" IsEnabled="False"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+              <TextBlock Text="プレビュー" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock x:Name="SummaryText" FontSize="13" Foreground="{StaticResource SubTextBrush}"
+                         Margin="14,1,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+          </DockPanel>
+
+          <Border Grid.Row="1" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,10,10" ClipToBounds="True">
+            <Grid>
+              <DataGrid x:Name="Grid" Margin="0,0,0,4">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="元のファイル名" Binding="{Binding OriginalName}" Width="*" MinWidth="140"/>
+                  <DataGridTemplateColumn Header="" Width="34" CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="→" Foreground="#9AA1B0" HorizontalAlignment="Center"/>
+                      </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+                  <DataGridTextColumn Header="新しいファイル名" Binding="{Binding NewNameDisplay}" Width="*" MinWidth="140">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{Binding NewNameBrush}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTextColumn Header="撮影日時" Binding="{Binding DateText}" Width="165">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource SubTextBrush}"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTemplateColumn Header="日付の元" Width="92" SortMemberPath="SourceLabel">
+                    <DataGridTemplateColumn.CellTemplate>
+                      <DataTemplate>
+                        <Border Background="{Binding SourceBg}" CornerRadius="10" Padding="8,2" HorizontalAlignment="Left">
+                          <TextBlock Text="{Binding SourceLabel}" Foreground="{Binding SourceFg}" FontSize="12" FontWeight="SemiBold"/>
+                        </Border>
+                      </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+                  <DataGridTextColumn Header="状態" Binding="{Binding StatusText}" Width="140">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{Binding StatusBrush}"/>
+                        <Setter Property="FontSize" Value="12.5"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+
+              <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                <TextBlock Text="📷" FontSize="40" HorizontalAlignment="Center" FontFamily="Segoe UI Emoji"/>
+                <TextBlock x:Name="EmptyText" Text="フォルダを選ぶと、ここに変更後の名前が表示されます"
+                           FontSize="14" Foreground="{StaticResource SubTextBrush}" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                <TextBlock FontSize="12" Foreground="#8A90A0" Margin="0,14,0,0" TextAlignment="Center" LineHeight="18">
+                  対応形式　画像: JPG / PNG / HEIC / TIFF / WebP / BMP<LineBreak/>
+                  動画: MP4 / MOV / AVI / MKV / M4V / 3GP / WMV / FLV / MTS
+                </TextBlock>
+              </StackPanel>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ============ 下: 実行バー ============ -->
+    <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button x:Name="UndoButton" Style="{StaticResource SecondaryButton}" Content="↶ 元に戻す" Margin="0,0,10,0"
+                  Click="Undo_Click" IsEnabled="False" ToolTip="直前のリネームを取り消します"/>
+          <Button x:Name="RunButton" Style="{StaticResource PrimaryButton}" Content="名前を変更する" Click="Run_Click" IsEnabled="False"/>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+          <TextBlock x:Name="StatusText" FontSize="13" Foreground="{StaticResource SubTextBrush}" TextTrimming="CharacterEllipsis"
+                     Text="準備完了"/>
+          <ProgressBar x:Name="Progress" Height="4" Margin="0,6,0,0" Visibility="Collapsed" MaxWidth="420" HorizontalAlignment="Left" Width="420"
+                       Foreground="{StaticResource AccentBrush}" Background="#E6E9F0" BorderThickness="0"/>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+  </Grid>
+</Window>

@@ -1,0 +1,9 @@
+# ビルドで作られるもの
+bin/
+obj/
+dist-installer/
+
+# エディタ
+.vs/
+.vscode/
+*.user
