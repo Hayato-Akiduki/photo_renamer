@@ -1,0 +1,44 @@
+# v から始まるタグ（例: v2.2.0）を push すると、
+# アプリとインストーラーをビルドして GitHub Releases に公開する。
+# 公開されたインストーラーはアプリの自動アップデートで配られる。
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: タグと csproj のバージョンが一致するか確認
+        shell: powershell
+        run: |
+          [xml]$proj = Get-Content PhotoRenamer\PhotoRenamer.csproj -Encoding UTF8
+          $ver = ($proj.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          if ($ver -ne $tag) { throw "タグ ($tag) と csproj の Version ($ver) が違います" }
+
+      - name: Inno Setup を用意
+        shell: powershell
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: ビルドとインストーラー作成
+        shell: powershell
+        run: .\build.ps1
+
+      - name: リリースを公開
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $exe = Get-ChildItem dist-installer\*.exe | Select-Object -First 1
+          gh release create "${{ github.ref_name }}" $exe.FullName --title "${{ github.ref_name }}" --generate-notes

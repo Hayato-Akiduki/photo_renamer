@@ -53,11 +53,18 @@ Root: HKA; Subkey: "Software\Classes\Directory\shell\PhotoRenamer\command"; Valu
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{#AppName} を起動する"; Flags: nowait postinstall skipifsilent
+; アプリ内の自動アップデートで入れたときは、終わったらアプリを起動し直す
+Filename: "{app}\{#AppExe}"; Flags: nowait skipifnotsilent; Check: IsAppUpdate
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\PhotoRenamer"
 
 [Code]
+function IsAppUpdate(): Boolean;
+begin
+  Result := ExpandConstant('{param:update|0}') = '1';
+end;
+
 // .NET Framework 4.8 (Windows 10 1903 以降は標準搭載) があるか確認
 function InitializeSetup(): Boolean;
 var

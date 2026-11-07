@@ -21,11 +21,28 @@
 
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
-    <Grid Margin="20,20,20,6">
+    <!-- ============ 上: 更新のお知らせ ============ -->
+    <Border x:Name="UpdateBanner" Visibility="Collapsed" Background="{DynamicResource AccentSoftBrush}"
+            BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,10">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <Button Style="{StaticResource SecondaryButton}" Content="更新内容" Padding="12,6" FontSize="12.5" Margin="0,0,8,0" Click="UpdateNotes_Click"/>
+          <Button Style="{StaticResource SecondaryButton}" Content="あとで" Padding="12,6" FontSize="12.5" Margin="0,0,8,0" Click="UpdateLater_Click"/>
+          <Button x:Name="UpdateNowButton" Style="{StaticResource PrimaryButton}" Content="今すぐ更新" Padding="16,6" FontSize="13" Click="UpdateNow_Click"/>
+        </StackPanel>
+        <TextBlock VerticalAlignment="Center" FontSize="13.5" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis">
+          <Run Text="↑" Foreground="{DynamicResource AccentTextBrush}" FontWeight="Bold"/>
+          <Run x:Name="UpdateText" Text="新しいバージョンがあります"/>
+        </TextBlock>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" Margin="20,20,20,6">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="350"/>
         <ColumnDefinition Width="18"/>
@@ -206,7 +223,7 @@
     </Grid>
 
     <!-- ============ 下: 実行バー ============ -->
-    <Border Grid.Row="1" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+    <Border Grid.Row="2" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
       <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
           <Button x:Name="UndoButton" Style="{StaticResource SecondaryButton}" Content="↶ 元に戻す" Margin="0,0,10,0"
@@ -214,7 +231,8 @@
           <Button x:Name="RunButton" Style="{StaticResource PrimaryButton}" Content="名前を変更する" Click="Run_Click" IsEnabled="False"/>
         </StackPanel>
         <TextBlock x:Name="VersionText" DockPanel.Dock="Left" FontSize="12" Foreground="{DynamicResource MutedBrush}"
-                   VerticalAlignment="Center" Margin="0,0,14,0" Padding="0,0,14,0"/>
+                   VerticalAlignment="Center" Margin="0,0,14,0" Padding="0,0,14,0" Cursor="Hand"
+                   MouseLeftButtonUp="Version_Click"/>
         <Border DockPanel.Dock="Left" Width="1" Background="{DynamicResource LineBrush}" Margin="-14,6,14,6"/>
         <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
           <TextBlock x:Name="StatusText" FontSize="13" Foreground="{DynamicResource SubTextBrush}" TextTrimming="CharacterEllipsis"

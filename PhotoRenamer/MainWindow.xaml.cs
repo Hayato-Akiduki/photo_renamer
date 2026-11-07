@@ -46,7 +46,8 @@ namespace PhotoRenamer
             UpdateExample();
 
             VersionText.Text = "v" + AppVersion;
-            VersionText.ToolTip = $"写真・動画リネーマー バージョン {AppVersion}";
+            VersionText.ToolTip = $"写真・動画リネーマー バージョン {AppVersion}\nクリックで更新を確認します";
+            Loaded += async (s, e) => await CheckUpdateAsync(manual: false);
             UpdateThemeButton();
             SourceInitialized += (s, e) => ThemeManager.SetDarkTitleBar(this, ThemeManager.IsDark);
             ThemeManager.Changed += OnThemeChanged;
@@ -80,6 +81,97 @@ namespace PhotoRenamer
                 var info = (System.Reflection.AssemblyInformationalVersionAttribute)Attribute.GetCustomAttribute(
                     asm, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
                 return info?.InformationalVersion ?? asm.GetName().Version.ToString(3);
+            }
+        }
+
+        // ---------------- 自動アップデート ----------------
+
+        Updater.UpdateInfo _update;
+        bool _checking;
+
+        async void Version_Click(object sender, MouseButtonEventArgs e) => await CheckUpdateAsync(manual: true);
+
+        async Task CheckUpdateAsync(bool manual)
+        {
+            if (_checking) return;
+            _checking = true;
+            try
+            {
+                if (manual) StatusText.Text = "更新を確認しています…";
+                var info = await Updater.CheckAsync();
+                if (info != null)
+                {
+                    _update = info;
+                    UpdateText.Text = $"新しいバージョン v{info.Version.ToString(3)} があります（今は v{AppVersion}）";
+                    UpdateBanner.Visibility = Visibility.Visible;
+                    if (manual) StatusText.Text = "新しいバージョンが見つかりました";
+                }
+                else if (manual)
+                {
+                    StatusText.Text = "最新のバージョンです";
+                    MessageBox.Show(this, $"最新のバージョン（v{AppVersion}）を使っています。", "更新の確認",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 起動時はネットにつながっていなくても何も言わない
+                if (manual)
+                {
+                    StatusText.Text = "更新を確認できませんでした";
+                    MessageBox.Show(this, "更新を確認できませんでした。インターネット接続を確認してください。\n\n" + ex.Message,
+                        "更新の確認", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            finally { _checking = false; }
+        }
+
+        void UpdateLater_Click(object sender, RoutedEventArgs e) => UpdateBanner.Visibility = Visibility.Collapsed;
+
+        void UpdateNotes_Click(object sender, RoutedEventArgs e)
+        {
+            if (_update == null) return;
+            string notes = string.IsNullOrWhiteSpace(_update.Notes) ? "（説明はありません）" : _update.Notes.Trim();
+            if (notes.Length > 1500) notes = notes.Substring(0, 1500) + " …";
+            var r = MessageBox.Show(this, notes + "\n\nGitHub のページを開きますか？", $"v{_update.Version.ToString(3)} の更新内容",
+                MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (r == MessageBoxResult.Yes) Updater.OpenReleasesPage();
+        }
+
+        async void UpdateNow_Click(object sender, RoutedEventArgs e)
+        {
+            if (_update == null) return;
+            if (_busy)
+            {
+                MessageBox.Show(this, "処理が終わってから更新してください。", "更新", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            UpdateNowButton.IsEnabled = false;
+            SetBusy(true, "更新をダウンロードしています…");
+            var progress = new Progress<int>(p =>
+            {
+                Progress.IsIndeterminate = false;
+                Progress.Maximum = 100;
+                Progress.Value = p;
+                StatusText.Text = $"更新をダウンロードしています… {p}%";
+            });
+            try
+            {
+                string path = await Updater.DownloadAsync(_update, progress);
+                StatusText.Text = "更新しています。アプリは自動で再起動します…";
+                Updater.RunInstaller(path);
+                _busy = false;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                SetBusy(false, "更新に失敗しました");
+                UpdateNowButton.IsEnabled = true;
+                var r = MessageBox.Show(this, "更新できませんでした。\n\n" + ex.Message +
+                    "\n\nGitHub のページから手動でダウンロードしますか？", "更新", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (r == MessageBoxResult.Yes) Updater.OpenReleasesPage();
+                RebuildPlan();
             }
         }
 
